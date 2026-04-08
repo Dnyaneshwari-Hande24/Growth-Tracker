@@ -1,0 +1,14 @@
+{
+  "name": "innerrank-workspace",
+  "version": "1.0.0",
+  "description": "InnerRank: Self-Growth Platform",
+  "scripts": {
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "setup": "npm install && cd server && npm install && cd ../client && npm install"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
