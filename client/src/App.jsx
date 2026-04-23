@@ -14,14 +14,15 @@ import SignupPage from './pages/SignupPage';
 import LandingPage from './pages/LandingPage';
 
 function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState({ 
+    name: 'GrowthTrack Admin', 
+    email: 'admin@growthtrack.com',
+    id: 'dummy_id' 
+  });
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+    // Auth is now bypassed. Always staying logged in.
   }, []);
 
   const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
