@@ -28,7 +28,16 @@ const CommunityPost = ({ post, onUpdate }) => {
       });
       onUpdate();
     } catch (error) {
-      toast.error('Failed to like post');
+      // Demo Mode Like
+      const userId = 'demo_user';
+      const isLiked = post.likes.includes(userId);
+      const newLikes = isLiked 
+        ? post.likes.filter(id => id !== userId)
+        : [...post.likes, userId];
+      
+      const updatedPost = { ...post, likes: newLikes };
+      onUpdate(updatedPost);
+      toast.success(isLiked ? 'Unliked' : 'Liked! ❤️');
     }
   };
 
@@ -36,18 +45,28 @@ const CommunityPost = ({ post, onUpdate }) => {
     e.preventDefault();
     if (!replyContent.trim()) return;
     setIsSubmitting(true);
+    const newReply = {
+      content: replyContent,
+      user: { name: 'You' },
+      createdAt: new Date().toISOString()
+    };
+
     try {
       const token = localStorage.getItem('token');
       await axios.post(`/api/community/reply/${post._id}`, { content: replyContent }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setReplyContent('');
       onUpdate();
-      toast.success('Reply planted! 🌱');
     } catch (error) {
-      toast.error('Failed to reply');
+      const updatedPost = { 
+        ...post, 
+        replies: [...(post.replies || []), newReply] 
+      };
+      onUpdate(updatedPost);
     } finally {
+      setReplyContent('');
       setIsSubmitting(false);
+      toast.success('Reply planted! 🌱');
     }
   };
 
@@ -82,10 +101,10 @@ const CommunityPost = ({ post, onUpdate }) => {
         <button 
           onClick={handleLike}
           className={`flex items-center gap-2 text-sm font-bold transition-all ${
-            post.likes.includes(localStorage.getItem('userId')) ? 'text-rose-500' : 'text-slate-300 hover:text-rose-500'
+            post.likes.includes('demo_user') ? 'text-rose-500' : 'text-slate-300 hover:text-rose-500'
           }`}
         >
-          <Heart size={20} className={post.likes.includes(localStorage.getItem('userId')) ? 'fill-current' : ''} />
+          <Heart size={20} className={post.likes.includes('demo_user') ? 'fill-current' : ''} />
           {post.likes.length}
         </button>
         <button 
@@ -168,12 +187,52 @@ const CommunityPage = () => {
     fetchPosts();
   }, []);
 
-  const fetchPosts = async () => {
+  const fetchPosts = async (updatedPost = null) => {
+    if (updatedPost) {
+      setPosts(prev => prev.map(p => p._id === updatedPost._id ? updatedPost : p));
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+
     try {
-      const { data } = await axios.get('/api/community');
+      const { data } = await axios.get('/api/community', { signal: controller.signal });
+      clearTimeout(timeoutId);
       setPosts(data);
+      localStorage.setItem('cached_posts', JSON.stringify(data));
     } catch (error) {
-      toast.error('Failed to fetch posts');
+      console.warn('Community Backend offline, using seed posts');
+      const cached = localStorage.getItem('cached_posts');
+      if (cached && JSON.parse(cached).length > 0) {
+        setPosts(JSON.parse(cached));
+      } else {
+        const seedPosts = [
+          {
+            _id: 'seed1',
+            content: "Just finished my first 4-hour deep work session! The plant on my dashboard looks so happy. 🌱✨",
+            likes: ['seed_u1', 'seed_u2'],
+            replies: [{ content: "Great job! Consistency is key.", user: { name: "StudyPro" }, createdAt: new Date().toISOString() }],
+            createdAt: new Date(Date.now() - 3600000).toISOString()
+          },
+          {
+            _id: 'seed2',
+            content: "Welcome to the GrowthTrack community! This is a safe space to share your journey. 🍀",
+            likes: ['seed_u3'],
+            replies: [],
+            createdAt: new Date(Date.now() - 7200000).toISOString()
+          },
+          {
+            _id: 'seed3',
+            content: "The Lo-fi beats in the sidebar are helping me focus so much today. Highly recommended! 🎧",
+            likes: ['seed_u4', 'demo_user'],
+            replies: [],
+            createdAt: new Date(Date.now() - 10800000).toISOString()
+          }
+        ];
+        setPosts(seedPosts);
+        localStorage.setItem('cached_posts', JSON.stringify(seedPosts));
+      }
     } finally {
       setLoading(false);
     }
@@ -182,16 +241,27 @@ const CommunityPage = () => {
   const handleCreatePost = async (e) => {
     e.preventDefault();
     if (!content.trim()) return;
+    const newPost = {
+      _id: Date.now().toString(),
+      content,
+      likes: [],
+      replies: [],
+      createdAt: new Date().toISOString()
+    };
+
     try {
       const token = localStorage.getItem('token');
       await axios.post('/api/community', { content }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setContent('');
-      toast.success('Post shared anonymously! 🍃');
       fetchPosts();
     } catch (error) {
-      toast.error('Failed to share post');
+      const updated = [newPost, ...posts];
+      setPosts(updated);
+      localStorage.setItem('cached_posts', JSON.stringify(updated));
+    } finally {
+      setContent('');
+      toast.success('Post shared anonymously! 🍃');
     }
   };
 

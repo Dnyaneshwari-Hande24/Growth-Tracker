@@ -20,6 +20,7 @@ const Sidebar = ({ user, setUser, isDarkMode, toggleDarkMode }) => {
   const location = useLocation();
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
+  const LOFI_STREAM_URL = "https://stream.zeno.fm/0r0xa792kwzuv"; // 24/7 Lo-fi Radio
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -29,10 +30,12 @@ const Sidebar = ({ user, setUser, isDarkMode, toggleDarkMode }) => {
   };
 
   const toggleAudio = () => {
-    // Current "Lo-fi" stream or static track for demo
-    // Note: In real app, this would be a URL to a lo-fi stream
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+    }
     setIsPlaying(!isPlaying);
-    toast.success(isPlaying ? 'Focus Beats paused.' : 'Focus Beats: Deep Lo-fi 🎵');
   };
 
   const navLinks = [
@@ -81,7 +84,7 @@ const Sidebar = ({ user, setUser, isDarkMode, toggleDarkMode }) => {
            </div>
            <div className="flex items-center gap-3 z-10">
               <button 
-                onClick={() => setIsPlaying(!isPlaying)}
+                onClick={toggleAudio}
                 className="w-10 h-10 rounded-full bg-growth-primary flex items-center justify-center hover:scale-110 active:scale-95 transition-all text-white"
               >
                  {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-0.5" />}
@@ -138,6 +141,8 @@ const Sidebar = ({ user, setUser, isDarkMode, toggleDarkMode }) => {
           </button>
         )}
       </div>
+
+      <audio ref={audioRef} src={LOFI_STREAM_URL} preload="none" />
     </aside>
   );
 };

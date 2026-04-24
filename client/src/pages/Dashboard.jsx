@@ -116,6 +116,16 @@ const Dashboard = ({ user }) => {
         </div>
         <div className="hidden sm:flex items-center gap-3">
            <button 
+             onClick={() => {
+               setStats(prev => ({ ...prev, totalHours: prev.totalHours + 1 }));
+               toast.success('1 Hour logged! You are growing! 🚀');
+             }}
+             className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest bg-growth-primary text-white shadow-xl shadow-growth-primary/20 hover:scale-105 active:scale-95 transition-all"
+           >
+              <Zap size={16} />
+              Log 1 Hour
+           </button>
+           <button 
              onClick={handleWatering}
              disabled={isWatering}
              className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all ${
@@ -165,7 +175,7 @@ const Dashboard = ({ user }) => {
               transition={{ duration: isWatering ? 1 : 4, repeat: isWatering ? 3 : Infinity }}
               className="text-9xl drop-shadow-2xl relative z-0 select-none pb-4"
            >
-              {growthProgress < 25 ? '🌱' : growthProgress < 60 ? '🌿' : '🌳'}
+              {growthProgress < 10 ? '🌱' : growthProgress < 30 ? '🌿' : growthProgress < 50 ? '🍀' : growthProgress < 80 ? '🌳' : '🌲'}
            </motion.div>
            
            <div className="absolute bottom-6 w-32 h-16 bg-slate-100 rounded-[50%] blur-xl -z-10 opacity-50" />

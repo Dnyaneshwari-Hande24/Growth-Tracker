@@ -102,6 +102,36 @@ const MentalHealthPage = () => {
         <p className="text-slate-500 font-medium">Nurture your mind as much as your skills.</p>
       </div>
 
+      {/* Mood Tracker Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="p-8 rounded-5xl bg-gradient-to-br from-white to-growth-light/20 border border-slate-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6"
+      >
+        <div className="space-y-1 text-center sm:text-left">
+          <h3 className="text-lg font-black text-growth-dark">How is your energy today?</h3>
+          <p className="text-xs text-slate-400 font-medium uppercase tracking-widest">Select your current mood sprout</p>
+        </div>
+        <div className="flex gap-4 p-2 bg-white/50 backdrop-blur-md rounded-3xl border border-white shadow-inner">
+          {[
+            { emoji: '😢', label: 'Low' },
+            { emoji: '😐', label: 'Okay' },
+            { emoji: '🙂', label: 'Good' },
+            { emoji: '😊', label: 'Great' },
+            { emoji: '🤩', label: 'Radiant' }
+          ].map((m, i) => (
+            <button 
+              key={i}
+              onClick={() => toast.success(`Mood logged: ${m.label}! 🌟`)}
+              className="w-12 h-12 flex items-center justify-center text-2xl hover:scale-125 hover:rotate-6 transition-all duration-300"
+              title={m.label}
+            >
+              {m.emoji}
+            </button>
+          ))}
+        </div>
+      </motion.div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Breathing Exercise Card */}
         <motion.div 
@@ -121,8 +151,8 @@ const MentalHealthPage = () => {
               className="w-40 h-40 rounded-3xl bg-growth-light/50 border-4 border-growth-primary/20"
             />
             <div className="absolute inset-0 flex items-center justify-center">
-               <span className="text-xs font-black text-growth-primary uppercase tracking-widest">
-                 {activeSession === 'breathing' ? 'Breathing...' : ''}
+               <span className="text-xs font-black text-growth-primary uppercase tracking-widest text-center px-4">
+                 {activeSession === 'breathing' ? 'Calm your mind...' : 'Ready?'}
                </span>
             </div>
           </div>

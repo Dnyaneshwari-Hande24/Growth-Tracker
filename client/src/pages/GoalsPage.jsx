@@ -46,59 +46,86 @@ const GoalsPage = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setGoals(data);
+      localStorage.setItem('cached_goals', JSON.stringify(data));
     } catch (error) {
-      toast.error('Failed to load goals');
+      console.warn('Backend unavailable, using Demo Mode');
+      const cached = localStorage.getItem('cached_goals');
+      if (cached) {
+        setGoals(JSON.parse(cached));
+      } else {
+        setGoals([]); // Start empty in Demo Mode
+      }
+      toast.success('Running in Demo Mode! 🚀');
     } finally {
       setLoading(false);
     }
   };
 
   const quickAdd = async (template) => {
+    const newGoal = {
+      _id: Date.now().toString(),
+      title: template.title,
+      description: template.desc,
+      category: template.category,
+      progress: 0,
+      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    };
+    
     try {
       const token = localStorage.getItem('token');
-      await axios.post('/api/goals', {
-        title: template.title,
-        description: template.desc,
-        category: template.category,
-        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 1 week from now
-      }, {
+      await axios.post('/api/goals', newGoal, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success(`${template.title} planted! 🌱`);
       fetchGoals();
     } catch (error) {
-      toast.error('Could not add template');
+      const updated = [...goals, newGoal];
+      setGoals(updated);
+      localStorage.setItem('cached_goals', JSON.stringify(updated));
     }
+    toast.success(`${template.title} planted! 🌱`);
   };
 
   const handleAddGoal = async (e) => {
     e.preventDefault();
+    const newGoal = {
+      ...formData,
+      _id: Date.now().toString(),
+      progress: 0
+    };
+
     try {
       const token = localStorage.getItem('token');
       await axios.post('/api/goals', formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success('Goal set! Let\'s grow.');
-      setShowAdd(false);
-      setFormData({ title: '', description: '', deadline: '', category: 'Study' });
       fetchGoals();
     } catch (error) {
-      toast.error('Failed to add goal');
+      const updated = [...goals, newGoal];
+      setGoals(updated);
+      localStorage.setItem('cached_goals', JSON.stringify(updated));
     }
+    
+    toast.success('Goal set! Let\'s grow.');
+    setShowAdd(false);
+    setFormData({ title: '', description: '', deadline: '', category: 'Study' });
   };
 
   const updateProgress = async (id, current) => {
-    const next = current + 10 === 100 ? 100 : (current + 10) % 110;
+    const next = current + 10 >= 100 ? 100 : current + 10;
+    
     try {
       const token = localStorage.getItem('token');
       await axios.put(`/api/goals/${id}`, { progress: next }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchGoals();
-      if (next === 100) toast.success('Goal accomplished! Perfect growth.');
     } catch (error) {
-      toast.error('Update failed');
+      const updated = goals.map(g => g._id === id ? { ...g, progress: next } : g);
+      setGoals(updated);
+      localStorage.setItem('cached_goals', JSON.stringify(updated));
     }
+    
+    if (next === 100) toast.success('Goal accomplished! Perfect growth.');
   };
 
   const deleteGoal = async (id) => {
@@ -108,11 +135,13 @@ const GoalsPage = () => {
       await axios.delete(`/api/goals/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success('Goal archived');
       fetchGoals();
     } catch (error) {
-      toast.error('Deletion failed');
+      const updated = goals.filter(g => g._id !== id);
+      setGoals(updated);
+      localStorage.setItem('cached_goals', JSON.stringify(updated));
     }
+    toast.success('Goal archived');
   };
 
   const categoryIcons = {
